@@ -61,7 +61,22 @@ python -m ml.train --out path/to/results.json
 | **`models.*`** | Per model: `accuracy`, `precision_macro`, `recall_macro`, `f1_macro`, `confusion_matrix`. Random forest also has `feature_importance` aligned with `feature_names` (non-negative, sum ≈ 1). |
 | **`scatter`** | Full Iris sample points: `pl`, `pw`, `species` for the petal scatter in the dashboard. |
 
-**Design notes:** One stratified 75/25 split (`random_state=42`), no cross-validation or hyperparameter tuning—reproducible baseline and stable exports. Confusion matrices use explicit class `labels` matching `target_names`.
+---
+
+## Design decisions
+
+**Machine learning**
+
+- **Two models:** Logistic regression (linear, fast) vs random forest (nonlinear, ensemble) on the same split to compare linear vs tree-based behavior on a small, well-behaved dataset.
+- **Single holdout split:** Stratified 75/25 with `random_state=42` for reproducibility. No cross-validation or tuning—the goal is a clear baseline and stable numbers for the dashboard, not leaderboard performance.
+- **No feature scaling:** Raw cm features for both models under identical conditions (called out in the UI); Iris is forgiving, so both models still perform strongly.
+- **Macro metrics:** Precision, recall, and F1 are **macro**-averaged so each species counts equally in a 3-class summary. Confusion matrices use explicit `labels` aligned with `target_names`, so the UI never guesses row/column order.
+- **Random forest:** `feature_importance` from the fitted forest is exported for the dashboard’s bar view.
+
+**Data export**
+
+- **One JSON file** holds `meta`, per-model results, and `scatter`, so the page can load everything with a single request.
+- **Scatter vs metrics:** The scatter plot uses all 150 samples (petal length vs width) for classic EDA. Reported accuracy, macro metrics, and confusion matrices come only from the stratified train/test split in `train.py`.
 
 ---
 
